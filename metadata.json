@@ -1,0 +1,6 @@
+{
+  "name": "Account Recovery UI",
+  "description": "Sebuah antarmuka pemulihan akun generik dengan langkah input email dan reset kata sandi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
